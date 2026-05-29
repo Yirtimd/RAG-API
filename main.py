@@ -20,17 +20,40 @@ embedding_fn = SentenceTransformerEmbeddingFunction(
     model_name='paraphrase-multilingual-MiniLM-L12-v2'
 )
 
+# @asynccontextmanager
+# async def lifespan(app: FastAPI):
+#     app.state.db = chromadb.PersistentClient(path=DB_PATH)
+#     app.state.collection = app.state.db.get_or_create_collection(
+#         name='documents', embedding_function=embedding_fn
+#     )
+#     app.state.llm = OpenAI(
+#         api_key=os.environ['OPENROUTER_API_KEY'],
+#         base_url=os.environ['BASE_URL'],
+#     )
+#     yield
+
+# app = FastAPI(lifespan=lifespan)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.db = chromadb.PersistentClient(path=DB_PATH)
-    app.state.collection = app.state.db.get_or_create_collection(
-        name='documents', embedding_function=embedding_fn
-    )
-    app.state.llm = OpenAI(
-        api_key=os.environ['OPENROUTER_API_KEY'],
-        base_url=os.environ['BASE_URL'],
-    )
+    print(">>> Старт: инициализация ChromaDB...", flush=True)
+    try:
+        app.state.db = chromadb.PersistentClient(path=DB_PATH)
+        print(">>> ChromaDB OK", flush=True)
+        app.state.collection = app.state.db.get_or_create_collection(
+            name="documents", embedding_function=embedding_fn
+        )
+        print(f">>> Collection OK, docs: {app.state.collection.count()}", flush=True)
+        app.state.llm = OpenAI(
+            api_key=os.environ["OPENROUTER_API_KEY"],
+            base_url=os.environ["BASE_URL"],
+        )
+        print(">>> LLM OK", flush=True)
+    except Exception as e:
+        print(f">>> ОШИБКА в lifespan: {e}", flush=True)
+        raise
     yield
+    print(">>> Сервер остановлен", flush=True)
 
 app = FastAPI(lifespan=lifespan)
 
