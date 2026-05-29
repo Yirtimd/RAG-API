@@ -17,7 +17,7 @@ load_dotenv()
 
 DB_PATH = str(Path(__file__).parent / 'chroma_db')
 embedding_fn = SentenceTransformerEmbeddingFunction(
-    model_name='paraphrase-multilingual-MiniLM-L12-v2'
+    model_name='all-MiniLM-L6-v2'
 )
 
 # @asynccontextmanager
